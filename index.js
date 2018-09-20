@@ -1,10 +1,17 @@
-
 const express = require('express')
+const app = express()
+const http = require('http').Server(app)
+const io = require('socket.io')(http)
+const bodyParser = require('body-parser')
+const fileUpload = require('express-fileupload')
+const path = require('path')
+const fs = require('fs')
+const faker = require('faker')
 
+// some constants
 const port = 5000
 const host = '0.0.0.0'
 const url = 'http://' + host + ':' + port
-const app = express()
 
 // enable cors middleware
 const cors = (req, res, next) => {
@@ -16,11 +23,15 @@ const cors = (req, res, next) => {
 }
 
 // attach middleware
-// app.use(cors)
+app.use(cors)
+app.use(bodyParser.json())
+app.use(fileUpload())
 app.use('/static', express.static('static'))
 
 const makeImage = (_id, url, description) => ({_id, url, description})
-
+const updateKey = 'UPDATE'
+let idCount = 10
+let sock
 // setup a lame db
 const db = {
 	[1]: makeImage(1, url + '/static/images/1.jpg', 'This is an interesting item'),
@@ -45,9 +56,49 @@ app.get('/data', (req, res) => {
 	res.status(200).json(data)
 })
 
-app.post('/update/image/:id', () => {})
+app.post('/update/image/:id', (req, res) => {
+	const id = req.params.id
+	let image = db[id]
+	if(!image){
+		return res.status(404).json("Image not found.")
+	}
+	db[id].description = req.body.description
+	sock.emit(updateKey, db)
+	res.status(200).json(db[id])
+})
+
+
+app.post('/new/image', (req, res) => {
+	// console.log('sock =>', sock)
+	const description = req.body.description
+	if(!req.files)
+    	return res.status(403).json('No image file were uploaded.')
+
+	const image = req.files.image
+	idCount += 1
+	const id = idCount
+	const fname = path.join(__dirname, `static/images/` + id)
+	image.mv(fname, (err) => {
+		if (err){
+			console.log(err)
+			return res.status(500).json("Failed to store file")
+		}
+		db[id] = makeImage(id, url + '/static/images/' + id, description)
+		data =[]
+		for(let id in db){
+			data.push(db[id])
+		}
+		sock.emit(updateKey, data)
+		res.status(201).json("File successfully uploaded.")
+	})
+})
+
+io.on('connection', (socket) => {
+	sock = socket
+	console.log('new client')
+})
 
 // start listening
-app.listen(port, host, () => {
+http.listen(port,host, () => {
 	console.log(`Listening on ${host}:${port}`)
 })
