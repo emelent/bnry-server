@@ -66,6 +66,13 @@ const db = {
 	},
 }
 
+const getAllEntries = () => {
+	const entries = []
+	for(let key in db)
+		entries.push(db[key])
+	return entries
+}
+
 // some globs
 let entryCount = Object.keys(db).length 
 let ioSock
@@ -102,8 +109,10 @@ app.post('/update/image/:id', (req, res) => { // update image description
 	if(!image){
 		return res.status(404).json("Image not found.")
 	}
+	
+	// update image description
 	db[id].description = req.body.description
-	ioSock.emit(updateKey, db)
+	ioSock.emit(updateKey, getAllEntries())
 	res.status(200).json(db[id])
 })
 
@@ -123,14 +132,11 @@ app.post('/new/image', (req, res) => { // upload a new image
 			console.log(err)
 			return res.status(500).json("Failed to store file")
 		}
+		// add image to db
 		db[id] = {_id: id, url: endpoint + '/static/images/' + id, description: req.body.description}
-		data =[]
-		for(let id in db){
-			data.push(db[id])
-		}
 
 		// send updated data to clients
-		ioSock.emit(updateKey, data)
+		ioSock.emit(updateKey, getAllEntries())
 		res.status(201).json("File successfully uploaded.")
 	})
 })
