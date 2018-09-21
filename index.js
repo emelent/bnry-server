@@ -66,12 +66,8 @@ const db = {
 	},
 }
 
-const getAllEntries = () => {
-	const entries = []
-	for(let key in db)
-		entries.push(db[key])
-	return entries
-}
+// get all entries
+const getAllEntries = () => Object.keys(db).map(key => db[key])
 
 // some globs
 let entryCount = Object.keys(db).length 
@@ -95,20 +91,15 @@ app.use('/static', express.static('static'))
 
 // routes
 app.all('/', (req, res) => { // return db image entries
-	const data =[]
-	for(let id in db){
-		data.push(db[id])
-	}
-
-	res.status(200).json(data)
+	res.status(200).json(getAllEntries())
 })
 
 app.post('/update/image/:id', (req, res) => { // update image description
 	const id = req.params.id
 	const image = db[id]
-	if(!image){
+	if(!image)
 		return res.status(404).json("Image not found.")
-	}
+
 	
 	// update image description
 	db[id].description = req.body.description
@@ -119,7 +110,7 @@ app.post('/update/image/:id', (req, res) => { // update image description
 
 app.post('/new/image', (req, res) => { // upload a new image
 	if(!req.files)
-	return res.status(403).json('No image file were uploaded.')
+		return res.status(403).json('No image file was uploaded.')
 	
 	entryCount += 1
 	const image = req.files.image
@@ -147,6 +138,4 @@ io.on('connection', (socket) => {
 })
 
 // start listening
-http.listen(port, () => {
-	console.log(`Listening on ${endpoint}`)
-})
+http.listen(port, () => console.log(`Listening on ${endpoint}`))
