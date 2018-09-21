@@ -8,7 +8,7 @@ const path = require('path')
 
 // some constants
 const port = process.env.PORT || 5000
-const endpoint = 'https://bnry-server.herokuapp.com'
+const endpoint = (port !== 5000)? 'https://bnry-server.herokuapp.com': 'http://0.0.0.0:5000'
 
 const updateKey = 'UPDATE'
 
