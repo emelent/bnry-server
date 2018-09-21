@@ -21,8 +21,7 @@ POST: /update/image/:id
 
 POST: /new/image
 	
-	with multipart form data in with a description and file
-	named image adds a new image to the server
+	with multipart form data which requires a `description` field with a description of the image and an `image` field with the new image to  upload to the server
 
 
 	
