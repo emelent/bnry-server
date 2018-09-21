@@ -7,9 +7,9 @@ const fileUpload = require('express-fileupload')
 const path = require('path')
 
 // some constants
-const port = 5000
-const host = '0.0.0.0'
-const endpoint = 'http://' + host + ':' + port
+const port = process.env.PORT || 5000
+const endpoint = 'https://bnry-server.herokuapp.com'
+
 const updateKey = 'UPDATE'
 
 // object representing the database
@@ -147,6 +147,6 @@ io.on('connection', (socket) => {
 })
 
 // start listening
-http.listen(port,host, () => {
-	console.log(`Listening on ${host}:${port}`)
+http.listen(port, () => {
+	console.log(`Listening on ${endpoint}`)
 })
